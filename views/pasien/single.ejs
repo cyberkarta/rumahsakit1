@@ -28,6 +28,20 @@
               <!-- /.card-header -->
               <div class="card-body">
                 <form class="form-horizontal">
+                  <div class="card card-secondary">
+                    <div class="card-header">
+                      <h3 class="card-title">Rumah Sakit</h3>
+                    </div>
+                    <div class="card-body">
+                    <div class="form-group row">
+                        <label for="inputEmail3" class="col-sm-2 col-form-label">Rumah Sakit</label>
+                        <div class="col-sm-10">
+                        <input type="text" class="form-control" value="<%= rekammedis.rumah_sakit %>" disabled>
+                        </div>
+                    </div>
+                    </div>
+                    <!-- /.card-body --> 
+                  </div>
                     <div class="card card-secondary">
                         <div class="card-header">
                           <h3 class="card-title">Data Identitas Pasien</h3>
@@ -45,12 +59,6 @@
                             <input type="text" class="form-control" value="<%= rekammedis.pasien.nama %>" disabled>
                             </div>
                         </div>
-                        <div class="form-group row">
-                          <label for="inputPassword3" class="col-sm-2 col-form-label">Jenis Kelamin</label>
-                          <div class="col-sm-10">
-                          <input type="text" class="form-control" value="<%= rekammedis.pasien.jenis_kelamin %>" disabled>
-                          </div>
-                      </div>
                         </div>
                         <!-- /.card-body --> 
                     </div>

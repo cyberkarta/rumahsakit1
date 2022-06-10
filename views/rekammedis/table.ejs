@@ -2,7 +2,8 @@
     <thead>
     <tr>
       <th>No</th>
-      <th>Rumah Sakit</th>
+      <th>NIK</th>
+      <th>Nama</th>
       <th>Tanggal</th>
       <th>Diagnosis</th>
       <th>Action</th>
@@ -12,7 +13,8 @@
         <% for(let i = 0; i<rekammedis.length; i++){ %>
             <tr>
                 <td><%= i+1 %></td>
-                <td><%= rekammedis[i]?.rumah_sakit?.nama %></td>
+                <td><%= rekammedis[i]?.pasien?.nik %></td>
+                <td><%= rekammedis[i]?.pasien?.nama %></td>
                 <td><%= rekammedis[i]?.tanggal.toLocaleDateString('id-ID') %></td>
                 <td><%= rekammedis[i]?.diagnosis %></td>
                 <td>

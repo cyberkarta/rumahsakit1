@@ -1,15 +1,14 @@
-const Pasien = require('../../models/Pasien')
-const RumahSakit = require('../../models/RumahSakit')
 const RekamMedis = require('../../models/RekamMedis')
+const axios = require('axios');
+const {API_URL_KTP,API_URL_INTEROP,NAMA_RUMAH_SAKIT } = process.env
 module.exports = {
     index: async(req,res)=>{
         try {
-            const { id } = req.params
-            const pasien = await Pasien.findOne({_id : id})
-            const rekammedis = await RekamMedis.find({pasien : id}).populate('rumah_sakit')
+            // const { id } = req.params
+            const rekammedis = await RekamMedis.find()
             res.render('rekammedis/view',{
-                title:'Rekam Medis',
-                pasien, rekammedis
+                title:'Rekam Medis', 
+                rekammedis
             })
         } catch (error) {
             console.log(error)
@@ -17,13 +16,8 @@ module.exports = {
     },
     viewCreate : async(req,res)=>{
         try {
-            const { id } = req.params
-            const pasien = await Pasien.findOne({_id : id})
-            const rumahsakit = await RumahSakit.find();
             res.render('rekammedis/create',{
-                title:'Create Rekam Medis',
-                pasien,
-                rumahsakit
+                title:'Create Rekam Medis'
             })
         } catch (error) {
             console.log(error)
@@ -31,9 +25,16 @@ module.exports = {
     },
     actionCreate : async(req,res)=>{
         try {
-            const { id } = req.params
             const {
-                rumahsakit,
+                nik,
+                kontakNama, 
+                hubungan, 
+                kontakAlamat, 
+                kontakKelurahan,
+                kontakKecamatan, 
+                kontakKabupaten, 
+                kontakProvinsi, 
+                kontakNoHp,
                 tanggal,
                 tanggalkeluar,
                 diagnosis,
@@ -44,9 +45,40 @@ module.exports = {
                 tindaklanjut,
                 dokter
             } = req.body
+            const response = await axios({
+                method: 'get',
+                url: `${API_URL_KTP}/api/penduduk/${nik}`
+              }).catch(function (error) {
+                console.log(error.response.data.message)
+                res.redirect("/rekammedis/create")
+              })
+            const dataPasien = response.data.data
+            const kontakPasien = {
+                nama : kontakNama,
+                hubungan : hubungan,
+                no_hp : kontakNoHp,
+                alamat : {
+                    alamat : kontakAlamat,
+                    kelurahan : kontakKelurahan,
+                    kecamatan : kontakKecamatan,
+                    kabupaten : kontakKabupaten,
+                    provinsi : kontakProvinsi
+                }
+            }
             let rekammedis = await RekamMedis({
-                pasien : id,
-                rumah_sakit : rumahsakit,
+                pasien : {
+                    nik : nik,
+                    nama : dataPasien.nama,
+                    jenis_kelamin : dataPasien.jenis_kelamin,
+                    alamat : {
+                        alamat : dataPasien.alamat,
+                        kelurahan : dataPasien.kelurahan,
+                        kecamatan : dataPasien.kecamatan,
+                        kabupaten : dataPasien.kabupaten,
+                        provinsi : dataPasien.provinsi
+                    }
+                },
+                kontak : kontakPasien,
                 tanggal,
                 tanggal_keluar : tanggalkeluar,
                 diagnosis,
@@ -57,8 +89,44 @@ module.exports = {
                 tindak_lanjut : tindaklanjut,
                 dokter
             })
-            await rekammedis.save()
-            res.redirect(`/rekammedis/${id}`)
+            const createData = await rekammedis.save()
+            await axios({
+                method: 'post',
+                url: `${API_URL_INTEROP}/api/rekammedis/create`,
+                data: {
+                    rm_id : createData._id,
+                    rumah_sakit : NAMA_RUMAH_SAKIT,
+                    nik : nik,
+                    nama : dataPasien.nama,
+                    jenis_kelamin : dataPasien.jenis_kelamin,
+                    alamat : dataPasien.alamat,
+                    kelurahan : dataPasien.kelurahan,
+                    kecamatan : dataPasien.kecamatan,
+                    kabupaten : dataPasien.kabupaten,
+                    provinsi : dataPasien.provinsi,
+                    kontakNama, 
+                    hubungan, 
+                    kontakAlamat, 
+                    kontakKelurahan,
+                    kontakKecamatan, 
+                    kontakKabupaten, 
+                    kontakProvinsi, 
+                    kontakNoHp,
+                    tanggal,
+                    tanggalkeluar,
+                    diagnosis,
+                    hasilpemeriksaanfisik,
+                    hasilpemeriksaanpenunjang,
+                    diagnosisakhir,
+                    pengobatantindakan,
+                    tindaklanjut,
+                    dokter
+                }
+              }).catch(function (error) {
+                console.log(error.response.data.message)
+                res.redirect("/rekammedis/create")
+              })
+            res.redirect("/rekammedis")
         } catch (error) {
             console.log(error)
         }
@@ -66,23 +134,22 @@ module.exports = {
     viewSingle : async(req,res)=>{
         try {
             const {id} = req.params
-            const rekammedis = await RekamMedis.findOne({_id : id}).populate('pasien').populate('rumah_sakit')
+            const rekammedis = await RekamMedis.findOne({_id : id})
             res.render('rekammedis/single',{
                 title:'Rekam Medis Pasien', 
                 rekammedis
             })
         } catch (error) {
-            
+            console.log(error)
         }
     },
     viewEdit : async(req,res)=>{
         try {
             const {id} = req.params
-            const rekammedis = await RekamMedis.findOne({_id : id}).populate('pasien').populate('rumah_sakit')
-            const rumahsakit = await RumahSakit.find()
+            const rekammedis = await RekamMedis.findOne({_id : id})
             res.render('rekammedis/edit',{
                 title:'Edit Rekam Medis Pasien', 
-                rekammedis, rumahsakit
+                rekammedis
             })
         } catch (error) {
             console.log(error)
@@ -92,7 +159,14 @@ module.exports = {
         try {
             const { id } = req.params
             const {
-                rumahsakit,
+                kontakNama, 
+                hubungan, 
+                kontakAlamat, 
+                kontakKelurahan,
+                kontakKecamatan, 
+                kontakKabupaten, 
+                kontakProvinsi, 
+                kontakNoHp,
                 tanggal,
                 tanggalkeluar,
                 diagnosis,
@@ -103,10 +177,22 @@ module.exports = {
                 tindaklanjut,
                 dokter
             } = req.body
+            const kontakPasien = {
+                nama : kontakNama,
+                hubungan : hubungan,
+                no_hp : kontakNoHp,
+                alamat : {
+                    alamat : kontakAlamat,
+                    kelurahan : kontakKelurahan,
+                    kecamatan : kontakKecamatan,
+                    kabupaten : kontakKabupaten,
+                    provinsi : kontakProvinsi
+                }
+            }
             const rekammedis = await RekamMedis.findOneAndUpdate({
                 _id:id
             },{
-                rumah_sakit : rumahsakit,
+                kontak : kontakPasien,
                 tanggal,
                 tanggal_keluar : tanggalkeluar,
                 diagnosis,
